@@ -4,7 +4,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>d45492c9-9932-4971-8f03-b4318c594069</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>exceptions.py</StartupFile>
+    <StartupFile>DataLoad.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
