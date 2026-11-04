@@ -19,7 +19,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from .BankTransaction import DEBIT_ONLY_TYPES, RTGS_MINIMUM, TRANSACTION_TYPES
+from .BankTransaction import Debit_Only_Types, RTGS_Min, Transaction_Types
 from .exceptions import DataIntegrityError, SchemaValidationError
 
 
@@ -35,7 +35,7 @@ Column_Req = (
 # in this, we used for domain cheching purpose, create a dictonary of column and then frozenset of permitted values.
 Value_Req = {
     "account_type": frozenset({"Savings", "Current", "Salary", "NRI", "Fixed Deposit"}),
-    "transaction_type": TRANSACTION_TYPES,
+    "transaction_type": Transaction_Types,
     "transaction_direction": frozenset({"Debit", "Credit"}),
     "transaction_status": frozenset({"Success", "Failed", "Reversed", "Pending"}),
     "channel": frozenset({"Mobile_App", "Web", "ATM", "POS_Terminal", "Branch", "API"}),
@@ -408,7 +408,7 @@ class DataCleaner:
             and records the result in the cleaning log. I
         """
         df = self._df
-        mask = (df["transaction_type"] == "RTGS") & (df["transaction_amount"] < RTGS_MINIMUM)
+        mask = (df["transaction_type"] == "RTGS") & (df["transaction_amount"] < RTGS_Min)
         df["dq_rtgs_below_min"] = mask
         self._log.record("RTGS below the Rs 2 lakh RBI minimum", "transaction_type, transaction_amount",
                          int(mask.sum()), "Kept; flagged dq_rtgs_below_min",
@@ -450,7 +450,7 @@ class DataCleaner:
         """
 
         df = self._df
-        retail = DEBIT_ONLY_TYPES | {"UPI"}
+        retail = Debit_Only_Types | {"UPI"}
         mask = (df["account_type"] == "Fixed Deposit") & df["transaction_type"].isin(retail)
         df["dq_fd_retail"] = mask
         self._log.record("Fixed-deposit account used for retail payments", "account_type",
