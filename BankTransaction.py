@@ -16,7 +16,7 @@ from abc import ABC, abstractmethod
 from collections.abc import Mapping
 from datetime import datetime
 
-from .exceptions import InsufficientFundsError
+from exceptions import InsufficientFundsError
 
 """
 Allowed transaction types, stored as frozensets for fast lookups and
@@ -234,4 +234,5 @@ class CreditTransaction(Transaction):
 
 # dict dispatch: direction string -> class. Defined after the classes exist.
 _DIRECTION_TO_CLASS = {"Debit": DebitTransaction, "Credit": CreditTransaction}
-print("ID:", self.__transaction_id, "| Customer:", self.__customer_id,"| Amount:", self.__amount, "| Type:", self.__transaction_type)
+
+#print("ID:", self.__transaction_id, "| Customer:", self.__customer_id,"| Amount:", self.__amount, "| Type:", self.__transaction_type)
