@@ -4,7 +4,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>d45492c9-9932-4971-8f03-b4318c594069</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>Coursework___programming_for_DS.py</StartupFile>
+    <StartupFile>exceptions.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
@@ -21,6 +21,8 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="BankAccount.py" />
+    <Compile Include="BankTransaction.py" />
     <Compile Include="Coursework___programming_for_DS.py" />
     <Compile Include="DataLoad.py" />
     <Compile Include="exceptions.py" />

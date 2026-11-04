@@ -4,17 +4,18 @@
 
 import os
 import pandas as pd
+from BankTransaction import BankTransaction
 from exceptions import DataFileError
 
 
 class DataLoader:
     """Reads the banking CSV.
        file_path must be a non-empty string else raise ValueError .
-       if the column data is missing raises DataFileError.
+       if the column data is missing, raises DataFileError.
     """
 
-    REQUIRED_COLUMNS = ("transaction_amount", "transaction_direction",
-                        "transaction_status")
+    REQUIRED_COLUMNS = ("transaction_id", "customer_id", "transaction_amount",
+                        "transaction_direction", "transaction_status")
 
     def __init__(self, file_path):
         """Store the file path"""
@@ -46,3 +47,21 @@ class DataLoader:
         if self.__data is None:
             raise DataFileError("Call load() first")
         return self.__data.copy()
+
+
+    def to_transactions(self, limit=1000):
+        """Return up to `limit` successful rows as BankTransaction objects.
+        """
+
+        if isinstance(limit, bool) or not isinstance(limit, int) or limit < 1:
+            raise ValueError("limit must be a positive integer")
+
+        if self.__data is None:
+            raise DataFileError("Call load() first")
+
+        ok = self.__data[self.__data["transaction_status"] == "Success"].head(limit)
+        return [BankTransaction(float(row.transaction_amount),
+                                row.transaction_direction,
+                                str(row.transaction_id),
+                                str(row.customer_id))
+                for row in ok.itertuples()]

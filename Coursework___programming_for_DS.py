@@ -8,7 +8,7 @@ from exceptions import DataFileError
 
 
         
-# Real dataset
+# read dataset
 
 file_path="F:/Nuwan/MSc/Programming For Data Science/Coursework/Project/Coursework - programming for DS/IndianBankingTransactions.csv"
 
@@ -21,7 +21,7 @@ except DataFileError as error:
     print("Data problem:", error)
 else:
     print("Rows loaded:", rows)
-    print(loader.get_data().head(100))
+    print(loader.get_data().head(100)) # give 1st 100 rows
 finally:
     print("Program finished")
     
