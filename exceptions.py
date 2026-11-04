@@ -41,8 +41,7 @@ class DataIntegrityError(BankingDataError):
     """this exception rises when the raw extract's does not match the recorded value"""
 
 class TransactionRuleError(BankingDataError):
-    """A transaction breaks a banking business rule, for example a duplicate
-    transaction id or a transaction type the account does not allow."""
+    """This exception occurs when a transaction breaks a banking business rule"""
 
 class InsufficientFundsError(TransactionRuleError):
     """A debit would take an account below its permitted overdraft limit."""
