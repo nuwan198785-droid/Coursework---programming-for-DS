@@ -30,4 +30,4 @@ step,issue,column,n_affected,action,reason
 29,Same customer_id with different account_type or state,customer_id,549257,"Kept; 79,259 of 79,916 customers affected, so rows are treated as independent",customer_id is not a stable entity here; per-customer history features would be meaningless.
 30,Successful transaction while KYC is Pending or Expired,kyc_status,61229,Kept; reported as a compliance finding,Not a data error: it describes a control gap the bank may care about.
 31,Skewed amounts and ratios,transaction_amount,550000,Added log_amount and amount_to_balance (log10 ratio),Log scale makes a 2-to-1e7 range usable in charts and analysis..
-32,Low-cardinality text columns stored as strings,9 categorical columns,550000,Converted to category dtype (457 MB -> 176 MB),"Same values, far less memory and faster group-bys."
+32,Low-cardinality text columns stored as strings,9 categorical columns,550000,Converted to category dtype (164 MB -> 86 MB),"Same values, far less memory and faster group-bys."

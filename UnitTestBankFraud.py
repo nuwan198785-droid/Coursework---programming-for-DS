@@ -5,7 +5,7 @@
     handling of valid inputs, edge cases, and invalid data.
 
     To run:
-        Run from the project root: python -m pytest -v
+        Run from the project root: python -m pytest UnitTestBankFraud.py -v
 """
 
 import sys
@@ -99,20 +99,17 @@ def test_transaction_is_abstract():
     with pytest.raises(TypeError):
         Transaction("TXN000000001", "CUST000001", WHEN, "UPI", 10.0)
 
-"""
+
 def test_from_record_builds_the_right_subclass():
-"""
+    """This menthod check that from_record uses the direction to choose the transaction class.
+    """
 
-"""This menthod check that from_record uses the direction to choose the transaction class.
-"""
-
-"""
     assert isinstance(Transaction.from_record(sample_row()), DebitTransaction)
     assert isinstance(Transaction.from_record(sample_row(transaction_direction="Credit")),
                       CreditTransaction)
     with pytest.raises(ValueError):
         Transaction.from_record(sample_row(transaction_direction="Sideways"))
-"""
+
 
 def test_risk_flags():
     """This method check that the expected risk flags are returned for each transaction."""

@@ -7,7 +7,7 @@
   "source_url": "FILL IN: URL of the page you downloaded from",
   "licence": "FILL IN: licence shown on the source page",
   "extracted_on": "FILL IN: YYYY-MM-DD you downloaded it",
-  "pipeline_run_on": "2026-11-05",
+  "pipeline_run_on": "2026-11-06",
   "method": "Manual download of the CSV from the source page; stored unchanged in data/raw/ and verified by SHA-256 on every run.",
-  "load_seconds": 0.66
+  "load_seconds": 0.1
 }

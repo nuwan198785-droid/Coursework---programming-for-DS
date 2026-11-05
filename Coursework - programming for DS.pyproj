@@ -4,7 +4,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>d45492c9-9932-4971-8f03-b4318c594069</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>DataLoad.py</StartupFile>
+    <StartupFile>UnitTestBankFraud.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
@@ -29,6 +29,7 @@
     <Compile Include="MainFraudDetection.py" />
     <Compile Include="DataLoad.py" />
     <Compile Include="exceptions.py" />
+    <Compile Include="storage_format_comparison.py" />
     <Compile Include="StoreData.py" />
     <Compile Include="UnitTestBankFraud.py" />
     <Compile Include="__init__.py" />

@@ -57,16 +57,15 @@ def save(fig, name):
     print(f"    saved figures/{name}")
     
 
-"""
 def rule_performance(df, threshold=200_000):
-    
+    """
         This function tests a simple fraud rule. this give a flag any transaction of at least 200,000. 
         It then checks how well the rule works in two periods:
         
             1.Development: transactions before the cutoff year
             2.Test: transactions from the cutoff year onwards
     Using two periods shows whether the rule still works on later data, rather than only on the data used to create it.
-    
+    """
     
     cutoff_year = int(CUTOFF[:4])
     periods = {"development": df[df["year"] < cutoff_year], "test": df[df["year"] >= cutoff_year]}
@@ -86,7 +85,7 @@ def rule_performance(df, threshold=200_000):
             "lift": precision / base_rate,
         }
     return pd.DataFrame.from_dict(results, orient="index")
-    """
+ 
 
 # 1. OBTAIN
 def obtain(args):

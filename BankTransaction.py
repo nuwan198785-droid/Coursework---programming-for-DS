@@ -42,8 +42,7 @@ class Transaction(ABC):
     """
         only One bank transaction implement. 
             1.create a DebitTransaction or
-            2.create a CreditTransaction, or 
-            3.use Transaction.from_record().
+            2.create a CreditTransaction 
 
         All attributes are private so a transaction cannot be altered after it has been validated.
     """
@@ -180,7 +179,34 @@ class Transaction(ABC):
         if not allow_negative and value < 0:
             raise ValueError(f"{name} must be >= 0, got {value!r}")
 
-    # ----------------------------------------------------------- dunder API
+#  Create the correct transaction subclass from a dataset record
+    @classmethod
+    def from_record(cls, record):
+        """
+            It converts one row of dataset values into the correct transaction object, 
+            creating a DebitTransaction or CreditTransaction based on transaction_direction.
+        """
+
+        if not isinstance(record, Mapping) and not hasattr(record, "keys"):
+            raise TypeError(f"record must be a mapping, got {type(record).__name__}")
+        try:
+            direction = record["transaction_direction"]
+            subclass = _DIRECTION_TO_CLASS[direction]
+            stamp = datetime.strptime(
+                f"{record['transaction_date']} {record['transaction_time']}", _TIMESTAMP_FORMAT
+            )
+            return subclass(
+                txn_id=record["transaction_id"],
+                customer_id=record["customer_id"],
+                timestamp=stamp,
+                txn_type=record["transaction_type"],
+                amount=float(record["transaction_amount"]),
+                channel=record.get("channel", "Unknown"),
+            )
+        except KeyError as missing:
+            raise ValueError(f"record is missing field or has unknown direction: {missing}") from None
+
+    #  Compare and hash transactions by ID, and provide a readable text representation
     def __eq__(self, other):
         return isinstance(other, Transaction) and other._txn_id == self._txn_id
 
