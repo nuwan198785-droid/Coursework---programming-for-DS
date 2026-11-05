@@ -19,8 +19,8 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from .BankTransaction import Debit_Only_Types, RTGS_Min, Transaction_Types
-from .exceptions import DataIntegrityError, SchemaValidationError
+from BankTransaction import Debit_Only_Types, RTGS_Min, Transaction_Types
+from exceptions import DataIntegrityError, SchemaValidationError
 
 
 # identified required colum and put them into tuple
@@ -258,7 +258,7 @@ class DataCleaner:
     def _outside_study_period(self):
         
         """
-            This function finds transactions dated outside the 2019–2023 study period and log the result.
+            This function finds transactions dated outside the 2019â€“2023 study period and log the result.
             the number of flagged rows is recorded in the cleaning log. Rows are kept, not removed.
         """
         
@@ -398,7 +398,7 @@ class DataCleaner:
                (df["transaction_amount"] > df["account_balance"])
         df["dq_exceeds_balance"] = mask
         self._log.record("Debit larger than the account balance", "transaction_amount, account_balance",
-                         int(mask.sum()), "Kept; flagged dq_exceeds_balance and used as a feature",
+                         int(mask.sum()), "Kept; flagged dq_exceeds_balance and tested for association with fraud",
                          "Possible only with an overdraft, or if the balance is recorded after the "
                          "debit. The field's meaning is undocumented, so it is not 'corrected'.")
 
@@ -430,7 +430,7 @@ class DataCleaner:
 
     def _transaction_channeltype_conflict(self):
         """
-            This function finds transactions where the transaction type doesn’t match the channel, 
+            This function finds transactions where the transaction type doesnâ€™t match the channel, 
             flags them, and records the result in the cleaning log.
         """
 
@@ -475,11 +475,11 @@ class DataCleaner:
 
     def _kyc_not_verified(self):
         """
-            This function counts successful transactions made when the customer’s KYC status isn’t Verified, 
+            This function counts successful transactions made when the customerâ€™s KYC status isnâ€™t Verified, 
             then records the result in the cleaning log.
 
-            KYC (Know Your Customer) is the process banks use to confirm a customer’s identity. 
-            A successful transaction with Pending or Expired KYC may mean the bank’s controls didn’t stop it. 
+            KYC (Know Your Customer) is the process banks use to confirm a customerâ€™s identity. 
+            A successful transaction with Pending or Expired KYC may mean the bankâ€™s controls didnâ€™t stop it. 
             The log therefore treats this as a compliance finding, not a data error.
         """
         df = self._df
@@ -503,7 +503,7 @@ class DataCleaner:
         df["year"] = df["timestamp"].dt.year
         self._log.record("Skewed amounts and ratios", "transaction_amount", len(df),
                          "Added log_amount and amount_to_balance (log10 ratio)",
-                         "Log scale makes a 2-to-1e7 range usable in charts and models.")
+                         "Log scale makes a 2-to-1e7 range usable in charts and analysis..")
 
     def _optimize_dtypes(self):
         """

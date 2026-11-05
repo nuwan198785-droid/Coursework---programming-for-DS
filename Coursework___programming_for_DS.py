@@ -25,3 +25,6 @@ else:
 finally:
     print("Program finished")
     
+
+
+    want to change as new one that means without machine learning

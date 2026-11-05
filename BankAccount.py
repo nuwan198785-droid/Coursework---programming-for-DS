@@ -10,8 +10,8 @@
 import math
 from collections.abc import Iterable
 
-from .BankTransaction import Transaction, Transaction_Types
-from .exceptions import TransactionRuleError
+from BankTransaction import Transaction, Transaction_Types
+from exceptions import TransactionRuleError
 
 
 class BankAccount:
@@ -91,7 +91,7 @@ class BankAccount:
 
         """
             This method checks whether an account type accepts a transaction. 
-            If the transaction type isnít allowed, it raises TransactionRuleError.
+            If the transaction type isn‚Äôt allowed, it raises TransactionRuleError.
             Subclasses override this to add account-specific rules.
         """
         if txn.txn_type not in self.Valid_Type:
@@ -103,7 +103,7 @@ class BankAccount:
     def Post_Transaction(self, txn):
         """
             This method records one transaction on the account and returns the new balance. 
-            In banking, ìpostingî means entering a transaction into the accountís records.
+            In banking, ‚Äúposting‚Äù means entering a transaction into the account‚Äôs records.
 
             The method runs all checks first and changes the account only after they pass. 
             If a check fails, the balance and transaction history stay unchanged.
@@ -153,7 +153,7 @@ class BankAccount:
     def summary(self):
         """
             This function gives a dictionary which contains the summarization of the account. 
-            It shows the accountís ID, type, balance, and transaction counts without changing anything.
+            It shows the account‚Äôs ID, type, balance, and transaction counts without changing anything.
         """
 
         debits = sum(1 for t in self._transactions if t.direction == "Debit")
