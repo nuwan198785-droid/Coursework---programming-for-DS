@@ -4,7 +4,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>d45492c9-9932-4971-8f03-b4318c594069</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>StoreData.py</StartupFile>
+    <StartupFile>Coursework___programming_for_DS.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>

@@ -1,0 +1,33 @@
+step,issue,column,n_affected,action,reason
+1,Exact duplicate rows,all,0,Checked; none removed,A repeated row would double-count a transaction.
+2,Duplicate transaction_id,transaction_id,0,Checked; none found,transaction_id must be a unique key.
+3,Same content under different ids,all but transaction_id,0,Checked; none found,Catches re-keyed duplicates that an id check misses.
+4,Date and time stored as text,"transaction_date, transaction_time",550000,Combined into one datetime column; 0 failed to parse,"Text dates cannot be sorted, split by year or used for a time-based split."
+5,Rows dated outside 2019-2023,timestamp,295,Kept; flagged dq_outside_window and excluded from per-year charts,All are 2024-01-01: a partial single day that would distort yearly totals.
+6,transaction_hour disagrees with transaction_time,transaction_hour,0,Checked; derived column is consistent,A redundant column can silently drift from its source.
+7,Values outside the allowed set: account_type,account_type,0,Checked; would be set to 'Unknown',Typos or new codes would split one category into several.
+8,Values outside the allowed set: transaction_type,transaction_type,0,Checked; would be set to 'Unknown',Typos or new codes would split one category into several.
+9,Values outside the allowed set: transaction_direction,transaction_direction,0,Checked; would be set to 'Unknown',Typos or new codes would split one category into several.
+10,Values outside the allowed set: transaction_status,transaction_status,0,Checked; would be set to 'Unknown',Typos or new codes would split one category into several.
+11,Values outside the allowed set: channel,channel,0,Checked; would be set to 'Unknown',Typos or new codes would split one category into several.
+12,Values outside the allowed set: kyc_status,kyc_status,0,Checked; would be set to 'Unknown',Typos or new codes would split one category into several.
+13,Inconsistent state naming ('UP' abbreviation),state,27414,Replaced with 'Uttar Pradesh',Other nine states use full names; mixed forms break grouping and joins.
+14,loan_type blank because customer has no loan,loan_type,357712,Filled with 'No Loan',"Structurally missing, not unknown: has_loan = 0 and emi_amount = 0."
+15,loan_type blank although has_loan = 1,loan_type,19422,Filled with 'Unknown'; not imputed,Genuinely missing. Guessing a loan type would invent data.
+16,has_loan and emi_amount disagree,"has_loan, emi_amount",0,Checked; consistent,"A loan with no EMI, or an EMI with no loan, would be a contradiction."
+17,Value outside valid range: transaction_amount,transaction_amount,0,Checked; none invalid,Amounts and balances must be positive; CIBIL scores run 300-900.
+18,Value outside valid range: account_balance,account_balance,0,Checked; none invalid,Amounts and balances must be positive; CIBIL scores run 300-900.
+19,Value outside valid range: credit_score,credit_score,0,Checked; none invalid,Amounts and balances must be positive; CIBIL scores run 300-900.
+20,Value outside valid range: is_fraud,is_fraud,0,Checked; none invalid,Amounts and balances must be positive; CIBIL scores run 300-900.
+21,Amounts of Rs 10 lakh or more (extreme right tail),transaction_amount,1746,Kept; analysed on a log scale,"Mean Rs 29,907 vs median Rs 2,036. Large transfers are real and are where fraud concentrates, so deleting them would remove the signal."
+22,Amounts exactly at Rs 1 crore (looks like a generator cap),transaction_amount,4,Kept; flagged dq_amount_at_cap,A pile-up at a round maximum suggests values were clipped.
+23,Balance at Rs 500 floor or Rs 50 lakh cap,account_balance,326,Kept; flagged dq_balance_censored,"288 at floor, 38 at cap: true values are unknown beyond these limits."
+24,Debit larger than the account balance,"transaction_amount, account_balance",43902,Kept; flagged dq_exceeds_balance and tested for association with fraud,"Possible only with an overdraft, or if the balance is recorded after the debit. The field's meaning is undocumented, so it is not 'corrected'."
+25,RTGS below the Rs 2 lakh RBI minimum,"transaction_type, transaction_amount",19192,Kept; flagged dq_rtgs_below_min,"Breaks a payment-system rule, so the type label or the amount is wrong. We cannot tell which, so neither is changed."
+26,Merchant category 'Salary' on a debit,merchant_category,29402,Kept; flagged dq_category_conflict,"Salary is money received. Two thirds of 'Salary' rows are debits, so merchant_category is weakly reliable."
+27,"ATM withdrawal not via ATM, or POS not via POS terminal",channel,101920,Kept; flagged dq_channel_conflict,"48456 ATM + 53464 POS rows. Channel looks independent of type, so channel findings are treated with caution."
+28,Fixed-deposit account used for retail payments,account_type,22283,Kept; flagged dq_fd_retail,"Fixed deposits do not support UPI, POS, card, ATM or auto-debit."
+29,Same customer_id with different account_type or state,customer_id,549257,"Kept; 79,259 of 79,916 customers affected, so rows are treated as independent",customer_id is not a stable entity here; per-customer history features would be meaningless.
+30,Successful transaction while KYC is Pending or Expired,kyc_status,61229,Kept; reported as a compliance finding,Not a data error: it describes a control gap the bank may care about.
+31,Skewed amounts and ratios,transaction_amount,550000,Added log_amount and amount_to_balance (log10 ratio),Log scale makes a 2-to-1e7 range usable in charts and analysis..
+32,Low-cardinality text columns stored as strings,9 categorical columns,550000,Converted to category dtype (457 MB -> 176 MB),"Same values, far less memory and faster group-bys."

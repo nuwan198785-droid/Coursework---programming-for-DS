@@ -1,0 +1,13 @@
+{
+  "file": "IndianBankingTransactions.csv",
+  "sha256": "995498d3efc3813dda9d4366e12df81a48276b4abcb7023a1a55f974c664d71b",
+  "size_bytes": 79702197,
+  "rows": 550000,
+  "columns": 20,
+  "source_url": "FILL IN: URL of the page you downloaded from",
+  "licence": "FILL IN: licence shown on the source page",
+  "extracted_on": "FILL IN: YYYY-MM-DD you downloaded it",
+  "pipeline_run_on": "2026-11-05",
+  "method": "Manual download of the CSV from the source page; stored unchanged in data/raw/ and verified by SHA-256 on every run.",
+  "load_seconds": 0.83
+}
