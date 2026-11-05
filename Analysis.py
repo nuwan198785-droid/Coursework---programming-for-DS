@@ -5,7 +5,7 @@ basically, in here, Analyze fraud patterns in the cleaned transaction dataset.
 
 This module provides the FraudAnalyzer class to identify transaction
 characteristics associated with fraud and measure how well a simple,
-explainable model detects fraud compared with random selection.
+explainable rule detects fraud compared with random selection.
 
 Main methods:
     1. fraud_rate_by(): Calculate segment fraud rates, 95% Wilson confidence

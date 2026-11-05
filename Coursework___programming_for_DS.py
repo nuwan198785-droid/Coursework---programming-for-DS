@@ -4,7 +4,7 @@
 
 """
 project scope is to find which transaction characteristics are associated with fraud, 
-and how much better than random can a simple, explainable score find it?
+and how much better than random can a simple, explainable rule find it?
 """
 
 import argparse
@@ -30,7 +30,7 @@ Checksum = Raw_Data.with_suffix(".csv.sha256") # SHA-256 checksum file
 Processed = Root / "data" / "processed" # Folder for cleaned data.
 OUT = Root / "outputs" # Folder for result files.
 FIG = Root / "figures" # Folder for charts and figures.
-
+CUTOFF = "2023-01-01"   # development data before it, test data from it
 
 BLUE, ORANGE, GREY, INK, MUTED = "#2a78d6", "#eb6834", "#8a8984", "#0b0b0b", "#52514e" # Colours used in all charts.
 
@@ -55,7 +55,38 @@ def save(fig, name):
     fig.savefig(FIG / name, bbox_inches="tight")
     plt.close(fig)
     print(f"    saved figures/{name}")
+    
 
+"""
+def rule_performance(df, threshold=200_000):
+    
+        This function tests a simple fraud rule. this give a flag any transaction of at least 200,000. 
+        It then checks how well the rule works in two periods:
+        
+            1.Development: transactions before the cutoff year
+            2.Test: transactions from the cutoff year onwards
+    Using two periods shows whether the rule still works on later data, rather than only on the data used to create it.
+    
+    
+    cutoff_year = int(CUTOFF[:4])
+    periods = {"development": df[df["year"] < cutoff_year], "test": df[df["year"] >= cutoff_year]}
+    results = {}
+    for period, part in periods.items():
+        flagged = part["transaction_amount"] >= threshold
+        fraud = part["is_fraud"] == 1
+        amount = part["transaction_amount"]
+        precision = fraud[flagged].mean()
+        base_rate = fraud.mean()
+        results[period] = {
+            "flagged_share": flagged.mean(),
+            "recall": (flagged & fraud).sum() / fraud.sum(),
+            "fraud_value_captured": amount[flagged & fraud].sum() / amount[fraud].sum(),
+            "precision": precision,
+            "base_rate": base_rate,
+            "lift": precision / base_rate,
+        }
+    return pd.DataFrame.from_dict(results, orient="index")
+    """
 
 # 1. OBTAIN
 def obtain(args):
@@ -114,7 +145,7 @@ def scrub(raw):
 #  3. EXPLORE
 def explore(df, analyzer):
     """
-        this function contains the 2nd step in OSEMN  (Explore): describe the data and find what is linked to fraud.
+        this function contains the 3rd step in OSEMN  (Explore): describe the data and find what is linked to fraud.
 
         in this function Saves summary statistics and fraud rates to the outputs folder, 
         and creates five charts in the figures folder:
@@ -259,7 +290,7 @@ def explore(df, analyzer):
 #  4. MODEL
 def model(df):
     """
-        this function contains the 2nd step in OSEMN (Model): test, segment and predict fraud.
+        this function contains the 4th step in OSEMN (Model): test, segment and predict fraud.
 
         in this class, it gives answers for three questions: 
             1.which fields are linked to fraud
@@ -290,65 +321,75 @@ def model(df):
     tests.to_csv(OUT / "chi_square_tests.csv", index=False)
     print(tests[["column", "chi2", "p_value", "cramers_v"]].round(4).to_string(index=False))
 
-    # 4b. Segmentation into amount tiers
+    # 4b. Segmentation into amount tiers: first all data, then the development period only
     tiers = analyzer.risk_tiers()
     tiers.to_csv(OUT / "risk_tiers.csv")
     print(tiers[["n", "frauds", "rate", "share_of_rows", "share_of_frauds",
                  "share_of_fraud_value"]].round(4).to_string())
+    
+    development = df[df["year"] < int(CUTOFF[:4])]
+    development_tiers = FraudAnalyzer(development).risk_tiers()
+    development_tiers.to_csv(OUT / "risk_tiers_development.csv")
 
-    # 4c. Predictive check with a time-based hold-out
-    result = analyzer.fit_model(cutoff="2023-01-01", review_share=0.05)
-    result["coefficients"].to_csv(OUT / "model_coefficients.csv", header=["coefficient"])
-    result["curve"].to_csv(OUT / "capture_curve.csv", index=False)
-    metrics = {k: v for k, v in result.items() if k not in ("coefficients", "curve")}
-    (OUT / "model_metrics.json").write_text(json.dumps(metrics, indent=2))
-    print(f"    train: before 2023 ({metrics['n_train']:,} rows, {metrics['frauds_train']:,} frauds)"
-          f" | test: 2023 onward ({metrics['n_test']:,} rows, {metrics['frauds_test']:,} frauds)")
-    print(f"    ROC-AUC {metrics['roc_auc']:.3f} (0.5 = random) | PR-AUC {metrics['pr_auc']:.4f}"
-          f" vs base rate {metrics['test_base_rate']:.4f}")
-    print(f"    reviewing top 5% by model -> {pct(metrics['model_recall_at_review'], 1)} of frauds,"
-          f" {pct(metrics['model_value_capture_at_review'], 1)} of fraud value")
-    print(f"    rule 'amount >= Rs 2 lakh' flags {pct(metrics['rule_flag_share'], 1)} -> "
-          f"{pct(metrics['rule_recall'], 1)} of frauds, {pct(metrics['rule_value_capture'], 1)}"
-          f" of fraud value")
+    # Performance of the simple rule on the development and test periods
+    development = df[df["timestamp"] < pd.Timestamp(CUTOFF)]
+    development_tiers = FraudAnalyzer(development).risk_tiers()
+    development_tiers.to_csv(OUT / "risk_tiers_development.csv")
 
-    # Figure 6 - capture curve: model vs simple rule vs random review
-    curve = result["curve"]
-    fig, ax = plt.subplots(figsize=(6.5, 4))
-    ax.plot(curve["reviewed_share"] * 100, curve["fraud_value_captured"] * 100, color=ORANGE,
-            linewidth=2, label="Model: share of fraud VALUE caught")
-    ax.plot(curve["reviewed_share"] * 100, curve["fraud_count_captured"] * 100, color=BLUE,
-            linewidth=2, label="Model: share of fraud CASES caught")
-    ax.plot([0, 100], [0, 100], color=GREY, linestyle=":", linewidth=1.2, label="Random review")
-    ax.scatter([metrics["rule_flag_share"] * 100] * 2,
-               [metrics["rule_value_capture"] * 100, metrics["rule_recall"] * 100],
-               color=[ORANGE, BLUE], marker="D", s=40, zorder=3, edgecolor="white")
-    ax.annotate("Rule: amount >= Rs 2 lakh", (metrics["rule_flag_share"] * 100,
-                metrics["rule_value_capture"] * 100), xytext=(8, 72),
-                textcoords="data", fontsize=8, color=INK,
-                arrowprops={"arrowstyle": "-", "color": GREY, "linewidth": 0.8})
-    ax.set_xlim(0, 100)
-    ax.set_ylim(0, 100)
-    ax.set_xlabel("Share of 2023 transactions reviewed, highest score first (%)")
-    ax.set_ylabel("Share of fraud caught (%)")
-    ax.set_title("The score finds fraud VALUE well, fraud CASES only slightly")
-    ax.legend(loc="lower right", fontsize=8, frameon=False)
-    save(fig, "fig6_capture_curve.png")
-    return tests, tiers, metrics, result["coefficients"]
+
+    # 4c. Evaluate the review rule on development data and on later test data
+    rule = analyzer.evaluate_rule(cutoff=CUTOFF)
+    rule.to_csv(OUT / "rule_evaluation.csv", index_label="period")
+    test = rule.loc["test"]
+    print(f"    rule: review every transaction of Rs 2 lakh or more | split at {CUTOFF}")
+    print(f"    development: {int(rule.loc['development', 'n']):,} rows, "
+          f"{int(rule.loc['development', 'frauds']):,} frauds | "
+          f"test: {int(test['n']):,} rows, {int(test['frauds']):,} frauds")
+    print(f"    test: flags {pct(test['flagged_share'], 1)} -> {pct(test['recall'], 1)} of frauds, "
+          f"{pct(test['fraud_value_captured'], 1)} of fraud value")
+    print(f"    test precision {pct(test['precision'])} "
+          f"(95% CI {pct(test['precision_ci_low'])} to {pct(test['precision_ci_high'])}), "
+          f"{test['lift']:.1f} times the {pct(test['base_rate'])} fraud rate")
+
+
+
+    # Figure 6 - simple rule vs random review
+    labels = ["Development\n(before 2023)", "Test\n(2023 onward)"]
+    x = np.arange(len(labels))
+    width = 0.24
+    series = [("flagged_share", "Reviewed (random review catches this share)", GREY),
+              ("recall", "Fraud cases caught", BLUE),
+              ("fraud_value_captured", "Fraud value caught", ORANGE)]
+    fig, ax = plt.subplots(figsize=(7, 4))
+    for offset, (column, label, colour) in zip((-width, 0, width), series):
+        values = rule[column].to_numpy() * 100
+        bars = ax.bar(x + offset, values, width=width * 0.92, color=colour, label=label)
+        ax.bar_label(bars, labels=[f"{v:.1f}%" for v in values], padding=2, fontsize=8, color=INK)
+    ax.set_xticks(x)
+    ax.set_xticklabels(labels)
+    ax.set_ylim(0, 112)
+    ax.set_ylabel("Share of period total (%)")
+    ax.set_title("The Rs 2 lakh rule finds fraud value better than fraud cases")
+    ax.grid(axis="x", visible=False)
+    ax.legend(loc="upper center", bbox_to_anchor=(0.5, -0.16), ncol=3, fontsize=8, frameon=False)
+    save(fig, "fig6_rule_vs_random.png")
+    return tests, tiers, development_tiers, rule
 
 
 # 5. INTERPRET
-def interpret(df, tests, tiers, metrics):
+def interpret(df, tests, tiers, development_tiers, rule): 
     """
-        this function contains the 2nd step in OSEMN (Interpret): turn the results into a written summary.
+        this function contains the 5th step in OSEMN (Interpret): turn the results into a written summary.
 
-        here, we combine the overall fraud rate, the strongest chi-square result, the Tier A figures 
-        and the performance of the model and the simple rule.
+        in here, this class combines the overall fraud rate, the strongest chi-square result, 
+        the Tier A figures for all data and the development period, and the performance of the Rs 2 lakh rule on the test data. 
+        The rule is also compared with random review. 
     """
-
-
+    
     print("\n[5] INTERPRET")
     top = tiers.iloc[0]
+    development_top = development_tiers.iloc[0]
+    test = rule.loc["test"]
     lines = [
         "# Results summary (generated)",
         "",
@@ -357,18 +398,25 @@ def interpret(df, tests, tiers, metrics):
         f"- Strongest association (Cramer's V): {tests.iloc[0]['column']} "
         f"= {tests.iloc[0]['cramers_v']:.3f}; all others below "
         f"{tests.iloc[1]['cramers_v']:.3f}. Values under 0.1 are conventionally 'negligible'.",
-        f"- Tier A (Rs 2 lakh and over): {pct(top['share_of_rows'])} of transactions, "
+        f"- Tier A (Rs 2 lakh and over), all data: {pct(top['share_of_rows'])} of transactions, "
         f"fraud rate {pct(top['rate'])}, {pct(top['share_of_frauds'], 1)} of fraud cases, "
         f"{pct(top['share_of_fraud_value'], 1)} of fraud value.",
-        f"- Model on 2023 hold-out: ROC-AUC {metrics['roc_auc']:.3f}; "
-        f"top 5% review catches {pct(metrics['model_recall_at_review'], 1)} of cases and "
-        f"{pct(metrics['model_value_capture_at_review'], 1)} of value.",
-        f"- Rule 'amount >= Rs 2 lakh' reviews {pct(metrics['rule_flag_share'], 1)} and catches "
-        f"{pct(metrics['rule_recall'], 1)} of cases, {pct(metrics['rule_value_capture'], 1)} of value.",
+        f"- Tier A, development period: {pct(development_top['share_of_rows'])} of transactions, "
+        f"fraud rate {pct(development_top['rate'])}, "
+        f"{pct(development_top['share_of_frauds'], 1)} of fraud cases, "
+        f"{pct(development_top['share_of_fraud_value'], 1)} of fraud value.",
+        f"- Rule 'amount >= Rs 2 lakh' on test data reviews {pct(test['flagged_share'], 1)} and "
+        f"catches {pct(test['recall'], 1)} of cases, {pct(test['fraud_value_captured'], 1)} of "
+        f"value. Random review of the same share would catch about "
+        f"{pct(test['flagged_share'], 1)} of both.",
+        f"- Rule precision on test data: {pct(test['precision'])}, {test['lift']:.1f} times the "
+        f"test fraud rate of {pct(test['base_rate'])}.",
     ]
     (OUT / "results_summary.md").write_text("\n".join(lines) + "\n")
     for line in lines[2:]:
         print("   ", line)
+
+
 
 def main(argv=None):
     """
@@ -394,8 +442,8 @@ def main(argv=None):
     clean = scrub(raw)
     analyzer = FraudAnalyzer(clean)
     explored = explore(clean, analyzer)
-    tests, tiers, metrics, _ = model(explored)
-    interpret(explored, tests, tiers, metrics)
+    tests, tiers, development_tiers, rule = model(explored)
+    interpret(explored, tests, tiers, development_tiers, rule)
     print("\nDone. Tables in outputs/, figures in figures/.")
 
 
