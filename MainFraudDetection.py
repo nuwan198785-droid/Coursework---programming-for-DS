@@ -351,8 +351,6 @@ def model(df):
           f"(95% CI {pct(test['precision_ci_low'])} to {pct(test['precision_ci_high'])}), "
           f"{test['lift']:.1f} times the {pct(test['base_rate'])} fraud rate")
 
-
-
     # Figure 6 - simple rule vs random review
     labels = ["Development\n(before 2023)", "Test\n(2023 onward)"]
     x = np.arange(len(labels))

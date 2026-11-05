@@ -103,7 +103,7 @@ class DataLoader:
         if self._Expected_sha256_Val and Actual != self._Expected_sha256_Val:
             raise DataIntegrityError(
                 "raw extract has changed since its checksum was recorded",
-                context={"file": self._path.name, "expected": self._expected_sha256[:12],
+                context={"file": self._path.name, "expected": self._Expected_sha256_Val[:12],
                          "actual": Actual[:12]},
             )
         return Actual

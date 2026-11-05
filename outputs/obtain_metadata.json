@@ -9,5 +9,5 @@
   "extracted_on": "FILL IN: YYYY-MM-DD you downloaded it",
   "pipeline_run_on": "2026-11-05",
   "method": "Manual download of the CSV from the source page; stored unchanged in data/raw/ and verified by SHA-256 on every run.",
-  "load_seconds": 0.65
+  "load_seconds": 0.66
 }
